@@ -1,0 +1,400 @@
+
+Report Summary
+
+┌─────────┬───────────┬───────────────────┐
+│ Target  │   Type    │ Misconfigurations │
+├─────────┼───────────┼───────────────────┤
+│ .       │ terraform │         0         │
+├─────────┼───────────┼───────────────────┤
+│ main.tf │ terraform │        17         │
+└─────────┴───────────┴───────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+
+main.tf (terraform)
+===================
+Tests: 17 (SUCCESSES: 0, FAILURES: 17)
+Failures: 17 (UNKNOWN: 0, LOW: 1, MEDIUM: 5, HIGH: 4, CRITICAL: 7)
+
+AZU-0008 (HIGH): Account does not enforce HTTPS.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+You can configure your storage account to accept requests from secure connections only by setting the Secure transfer required property for the storage account.
+When you require secure transfer, any requests originating from an insecure connection are rejected.
+Microsoft recommends that you always require secure transfer for all of your storage accounts.
+
+
+See https://avd.aquasec.com/misconfig/azu-0008
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:27
+   via main.tf:20-29 (azurerm_storage_account.data)
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  20   resource "azurerm_storage_account" "data" {
+  21     name = "iaclabstorage123"
+  22     resource_group_name = azurerm_resource_group.lab.name
+  23     location = azurerm_resource_group.lab.location
+  24     account_tier = "Standard"
+  25     account_replication_type = "LRS"
+  26     allow_nested_items_to_be_public = true
+  27 [   https_traffic_only_enabled = false
+  28     min_tls_version = "TLS1_0"
+  29   }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0011 (CRITICAL): Storage account uses an insecure TLS version.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Azure Storage supports four versions of the TLS protocol: 1.0, 1.1, 1.2, and 1.3.
+Azure Storage uses TLS 1.2 or TLS 1.3 on public HTTPS endpoints, while TLS 1.0 and TLS 1.1 are still supported for backward compatibility.
+This check will warn if the minimum TLS version is set lower than TLS1_2. TLS1_2 and TLS1_3 are both allowed.
+
+
+See https://avd.aquasec.com/misconfig/azu-0011
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:28
+   via main.tf:20-29 (azurerm_storage_account.data)
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  20   resource "azurerm_storage_account" "data" {
+  21     name = "iaclabstorage123"
+  22     resource_group_name = azurerm_resource_group.lab.name
+  23     location = azurerm_resource_group.lab.location
+  24     account_tier = "Standard"
+  25     account_replication_type = "LRS"
+  26     allow_nested_items_to_be_public = true
+  27     https_traffic_only_enabled = false
+  28 [   min_tls_version = "TLS1_0"
+  29   }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0012 (CRITICAL): No network rules defined and default action allows access.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+The default_action for network rules should come into effect when no other rules are matched.
+The default action should be set to Deny.
+
+
+See https://avd.aquasec.com/misconfig/azu-0012
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:20-29
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  20 ┌ resource "azurerm_storage_account" "data" {
+  21 │   name = "iaclabstorage123"
+  22 │   resource_group_name = azurerm_resource_group.lab.name
+  23 │   location = azurerm_resource_group.lab.location
+  24 │   account_tier = "Standard"
+  25 │   account_replication_type = "LRS"
+  26 │   allow_nested_items_to_be_public = true
+  27 │   https_traffic_only_enabled = false
+  28 │   min_tls_version = "TLS1_0"
+  29 └ }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0013 (CRITICAL): Vault network ACL does not block access by default.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Network ACLs allow you to reduce your exposure to risk by limiting what can access your key vault.
+
+The default action of the Network ACL should be set to deny for when IPs are not matched. Azure services can be allowed to bypass.
+
+
+See https://avd.aquasec.com/misconfig/azu-0013
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:80-88
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  80 ┌ resource "azurerm_key_vault" "kv" {
+  81 │   name = "iac-lab-kv"
+  82 │   location = azurerm_resource_group.lab.location
+  83 │   resource_group_name = azurerm_resource_group.lab.name
+  84 │   tenant_id = "00000000-0000-0000-0000-000000000000"
+  85 │   sku_name = "standard"
+  86 │   purge_protection_enabled = false
+  87 │   public_network_access_enabled = true
+  88 └ }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0016 (MEDIUM): Vault does not have purge protection enabled.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Purge protection is an optional Key Vault behavior and is not enabled by default.
+
+Purge protection can only be enabled once soft-delete is enabled. It can be turned on via CLI or PowerShell.
+
+
+See https://avd.aquasec.com/misconfig/azu-0016
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:86
+   via main.tf:80-88 (azurerm_key_vault.kv)
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  80   resource "azurerm_key_vault" "kv" {
+  81     name = "iac-lab-kv"
+  82     location = azurerm_resource_group.lab.location
+  83     resource_group_name = azurerm_resource_group.lab.name
+  84     tenant_id = "00000000-0000-0000-0000-000000000000"
+  85     sku_name = "standard"
+  86 [   purge_protection_enabled = false
+  87     public_network_access_enabled = true
+  88   }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0022 (MEDIUM): Database server has public network access enabled.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Database resources should not publicly available. You should limit all access to the minimum that is required for your application to function.
+
+
+See https://avd.aquasec.com/misconfig/azu-0022
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:63-70
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  63 ┌ resource "azurerm_mssql_server" "sql" {
+  64 │   name = "iac-lab-sql"
+  65 │   resource_group_name = azurerm_resource_group.lab.name
+  66 │   location = azurerm_resource_group.lab.location
+  67 │   version = "12.0"
+  68 │   administrator_login = "sqladmin"
+  69 │   administrator_login_password = "P@ssw0rd123!"
+  70 └ }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0027 (MEDIUM): Server does not have an extended audit policy configured.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Auditing helps you maintain regulatory compliance, understand database activity, and gain insight into discrepancies and anomalies that could indicate business concerns or suspected security violations.
+
+
+See https://avd.aquasec.com/misconfig/azu-0027
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:63-70
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  63 ┌ resource "azurerm_mssql_server" "sql" {
+  64 │   name = "iac-lab-sql"
+  65 │   resource_group_name = azurerm_resource_group.lab.name
+  66 │   location = azurerm_resource_group.lab.location
+  67 │   version = "12.0"
+  68 │   administrator_login = "sqladmin"
+  69 │   administrator_login_password = "P@ssw0rd123!"
+  70 └ }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0029 (HIGH): Firewall rule allows public internet access to a database server.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Azure services can be allowed access through the firewall using a start and end IP address of 0.0.0.0. No other end ip address should be combined with a start of 0.0.0.0
+
+
+See https://avd.aquasec.com/misconfig/azu-0029
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:72-77
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  72 ┌ resource "azurerm_mssql_firewall_rule" "allow_all" {
+  73 │   name = "allow-all"
+  74 │   server_id = azurerm_mssql_server.sql.id
+  75 │   start_ip_address = "0.0.0.0"
+  76 │   end_ip_address = "255.255.255.255"
+  77 └ }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0047 (CRITICAL): Security group rule allows unrestricted ingress from any IP address.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Opening up ports to allow connections from the public internet is generally to be avoided. You should restrict access to IP addresses or ranges that are explicitly required where possible.
+
+
+See https://avd.aquasec.com/misconfig/azu-0047
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:57
+   via main.tf:49-59 (security_rule)
+    via main.tf:32-60 (azurerm_network_security_group.nsg)
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  32   resource "azurerm_network_security_group" "nsg" {
+  ..   
+  57 [     source_address_prefix = "0.0.0.0/0"
+  ..   
+  60   }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0047 (CRITICAL): Security group rule allows unrestricted ingress from any IP address.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Opening up ports to allow connections from the public internet is generally to be avoided. You should restrict access to IP addresses or ranges that are explicitly required where possible.
+
+
+See https://avd.aquasec.com/misconfig/azu-0047
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:45
+   via main.tf:37-47 (security_rule)
+    via main.tf:32-60 (azurerm_network_security_group.nsg)
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  32   resource "azurerm_network_security_group" "nsg" {
+  ..   
+  45 [     source_address_prefix = "0.0.0.0/0"
+  ..   
+  60   }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0048 (CRITICAL): Security group rule allows unrestricted ingress to RDP port from any IP address.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+RDP access can be configured on either the network security group or in the network security group rule.
+RDP access should not be permitted from the internet (*, 0.0.0.0, /0, internet, any). Consider using the Azure Bastion Service.
+
+
+See https://avd.aquasec.com/misconfig/azu-0048
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:57
+   via main.tf:49-59 (security_rule)
+    via main.tf:32-60 (azurerm_network_security_group.nsg)
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  32   resource "azurerm_network_security_group" "nsg" {
+  ..   
+  57 [     source_address_prefix = "0.0.0.0/0"
+  ..   
+  60   }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0050 (CRITICAL): Security group rule allows unrestricted ingress to SSH port from any IP address.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+SSH access can be configured on either the network security group or in the network security group rule.
+SSH access should not be permitted from the internet (*, 0.0.0.0, /0, internet, any)
+
+
+See https://avd.aquasec.com/misconfig/azu-0050
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:45
+   via main.tf:37-47 (security_rule)
+    via main.tf:32-60 (azurerm_network_security_group.nsg)
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  32   resource "azurerm_network_security_group" "nsg" {
+  ..   
+  45 [     source_address_prefix = "0.0.0.0/0"
+  ..   
+  60   }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0057 (MEDIUM): Storage account does not have logging enabled for any service.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Storage Analytics logs detailed information about successful and failed requests to a storage service.
+This information can be used to monitor individual requests and to diagnose issues with a storage service.
+Logging should be enabled for at least one storage service type.
+
+
+See https://avd.aquasec.com/misconfig/azu-0057
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:20-29
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  20 ┌ resource "azurerm_storage_account" "data" {
+  21 │   name = "iaclabstorage123"
+  22 │   resource_group_name = azurerm_resource_group.lab.name
+  23 │   location = azurerm_resource_group.lab.location
+  24 │   account_tier = "Standard"
+  25 │   account_replication_type = "LRS"
+  26 │   allow_nested_items_to_be_public = true
+  27 │   https_traffic_only_enabled = false
+  28 │   min_tls_version = "TLS1_0"
+  29 └ }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0058 (LOW): Storage account does not use geo-redundant replication.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Geo-redundant storage (GRS) replicates your data to a secondary region that is hundreds of miles away from the primary region.
+This provides an additional level of durability for your data in the event of a complete regional outage or a disaster.
+Options include GRS, RAGRS, GZRS, and RAGZRS for geo-redundancy.
+
+
+See https://avd.aquasec.com/misconfig/azu-0058
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:25
+   via main.tf:20-29 (azurerm_storage_account.data)
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  20   resource "azurerm_storage_account" "data" {
+  21     name = "iaclabstorage123"
+  22     resource_group_name = azurerm_resource_group.lab.name
+  23     location = azurerm_resource_group.lab.location
+  24     account_tier = "Standard"
+  25 [   account_replication_type = "LRS"
+  26     allow_nested_items_to_be_public = true
+  27     https_traffic_only_enabled = false
+  28     min_tls_version = "TLS1_0"
+  29   }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0059 (HIGH): Storage account does not enforce HTTPS for secure transfer.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Storage accounts should enforce HTTPS for secure data transfer and use a minimum TLS version of 1.2 or higher.
+This ensures that logs and data stored in the storage account are encrypted in transit.
+Azure Storage encrypts all data at rest by default, but transport encryption is also critical.
+
+
+See https://avd.aquasec.com/misconfig/azu-0059
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:27
+   via main.tf:20-29 (azurerm_storage_account.data)
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  20   resource "azurerm_storage_account" "data" {
+  21     name = "iaclabstorage123"
+  22     resource_group_name = azurerm_resource_group.lab.name
+  23     location = azurerm_resource_group.lab.location
+  24     account_tier = "Standard"
+  25     account_replication_type = "LRS"
+  26     allow_nested_items_to_be_public = true
+  27 [   https_traffic_only_enabled = false
+  28     min_tls_version = "TLS1_0"
+  29   }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0059 (HIGH): Storage account does not use a secure TLS version.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Storage accounts should enforce HTTPS for secure data transfer and use a minimum TLS version of 1.2 or higher.
+This ensures that logs and data stored in the storage account are encrypted in transit.
+Azure Storage encrypts all data at rest by default, but transport encryption is also critical.
+
+
+See https://avd.aquasec.com/misconfig/azu-0059
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:28
+   via main.tf:20-29 (azurerm_storage_account.data)
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  20   resource "azurerm_storage_account" "data" {
+  21     name = "iaclabstorage123"
+  22     resource_group_name = azurerm_resource_group.lab.name
+  23     location = azurerm_resource_group.lab.location
+  24     account_tier = "Standard"
+  25     account_replication_type = "LRS"
+  26     allow_nested_items_to_be_public = true
+  27     https_traffic_only_enabled = false
+  28 [   min_tls_version = "TLS1_0"
+  29   }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AZU-0061 (MEDIUM): Storage account does not have infrastructure encryption enabled.
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Infrastructure encryption provides an additional layer of encryption at the infrastructure level.
+When infrastructure encryption is enabled, data in the storage account is encrypted twice -
+once at the service level and once at the infrastructure level with two different encryption algorithms.
+This provides double encryption for enhanced security.
+
+
+See https://avd.aquasec.com/misconfig/azu-0061
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ main.tf:20-29
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  20 ┌ resource "azurerm_storage_account" "data" {
+  21 │   name = "iaclabstorage123"
+  22 │   resource_group_name = azurerm_resource_group.lab.name
+  23 │   location = azurerm_resource_group.lab.location
+  24 │   account_tier = "Standard"
+  25 │   account_replication_type = "LRS"
+  26 │   allow_nested_items_to_be_public = true
+  27 │   https_traffic_only_enabled = false
+  28 │   min_tls_version = "TLS1_0"
+  29 └ }
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
